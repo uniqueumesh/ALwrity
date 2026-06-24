@@ -1,0 +1,98 @@
+{
+  "object": "UserProfile",
+  "provider": "LINKEDIN",
+  "provider_id": "ACoAAExample123",
+  "entity_urn": "urn:li:fsd_profile:ACoAAExample123",
+  "object_urn": "12345678",
+  "public_identifier": "jane-doe-engineer",
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "headline": "Senior Software Engineer at Example Corp",
+  "location": "San Francisco, California, United States",
+  "is_self": true,
+  "is_premium": true,
+  "is_open_profile": false,
+  "public_profile_url": "https://www.linkedin.com/in/jane-doe-engineer",
+  "profile_picture_url": "https://media.licdn.com/dms/image/example-small.jpg",
+  "profile_picture_url_large": "https://media.licdn.com/dms/image/example-large.jpg",
+  "background_picture_url": "https://media.licdn.com/dms/image/example-bg.jpg",
+  "follower_count": 1200,
+  "connections_count": 500,
+  "primary_locale": {
+    "country": "US",
+    "language": "en"
+  },
+  "is_influencer": false,
+  "is_creator": true,
+  "websites": ["https://janedoe.dev"],
+  "hashtags": ["python", "backend"],
+  "summary": "Building reliable backend systems and sharing what I learn along the way.",
+  "work_experience_total_count": 2,
+  "work_experience": [
+    {
+      "company_id": "1001",
+      "company": "Example Corp",
+      "position": "Senior Software Engineer",
+      "location": "San Francisco Bay Area",
+      "company_picture_url": "https://media.licdn.com/dms/image/example-corp.jpg",
+      "description": "Lead backend services for the platform team.",
+      "skills": ["Python", "FastAPI"],
+      "start": "1/1/2021",
+      "end": null
+    },
+    {
+      "company_id": "1002",
+      "company": "Startup Inc",
+      "position": "Software Engineer",
+      "location": "Remote",
+      "company_picture_url": "",
+      "skills": [],
+      "start": "6/1/2018",
+      "end": "12/1/2020"
+    }
+  ],
+  "education_total_count": 1,
+  "education": [
+    {
+      "school_id": "2001",
+      "school": "Example University",
+      "school_picture_url": "https://media.licdn.com/dms/image/example-uni.jpg",
+      "degree": "B.S. Computer Science",
+      "start": "1/1/2014",
+      "end": "1/1/2018"
+    }
+  ],
+  "skills_total_count": 2,
+  "skills": [
+    {"name": "Python", "endorsement_count": 12},
+    {"name": "FastAPI", "endorsement_count": 5}
+  ],
+  "languages_total_count": 1,
+  "languages": [
+    {"name": "English", "proficiency": "Native or bilingual proficiency"}
+  ],
+  "certifications_total_count": 0,
+  "certifications": [],
+  "volunteering_experience_total_count": 0,
+  "volunteering_experience": [],
+  "projects_total_count": 0,
+  "projects": [],
+  "recommendations": {
+    "given_total_count": 0,
+    "given": [],
+    "received_total_count": 1,
+    "received": [
+      {
+        "caption": "Jan 2020, Jane was my colleague",
+        "text": "Jane is an excellent engineer and mentor.",
+        "actor": {
+          "first_name": "Alex",
+          "last_name": "Smith",
+          "headline": "Engineering Manager",
+          "public_profile_url": "https://www.linkedin.com/in/alexsmith",
+          "profile_picture_url": "https://media.licdn.com/dms/image/example-alex.jpg"
+        }
+      }
+    ]
+  }
+}
