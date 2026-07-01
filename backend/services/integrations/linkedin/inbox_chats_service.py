@@ -10,6 +10,7 @@ from typing import Any, Optional
 from loguru import logger
 
 from models.linkedin_inbox_models import InboxChat, InboxChatListResponse
+from services.integrations.linkedin.inbox_chats_filter import is_personal_linkedin_chat
 from services.integrations.linkedin.unipile_client import UnipileAPIError, UnipileClient
 
 FOLDER_LABELS: dict[str, str] = {
@@ -236,12 +237,23 @@ class InboxChatsService:
                 )
 
             normalized: list[InboxChat] = []
+            skipped = 0
             for item in items:
                 try:
-                    if isinstance(item, dict):
-                        normalized.append(_normalize_chat(item))
+                    if not isinstance(item, dict):
+                        continue
+                    if not is_personal_linkedin_chat(item, personal_account_id=account_id):
+                        skipped += 1
+                        continue
+                    normalized.append(_normalize_chat(item))
                 except Exception as exc:
                     logger.warning(f"[InboxChatsService] Failed to normalize chat: {exc}")
+
+            if skipped:
+                logger.info(
+                    f"[InboxChatsService] Filtered out {skipped} non-personal chats "
+                    f"account_id={account_id}"
+                )
 
             normalized.sort(
                 key=lambda chat: chat.timestamp or datetime.min,

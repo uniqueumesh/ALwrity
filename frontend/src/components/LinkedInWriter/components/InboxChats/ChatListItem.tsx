@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import type { InboxChat } from '../../../../services/inboxChatsApi';
+import { ChatDetailPanel } from './ChatDetailPanel';
 import { cardBase, chipMuted, chipPrimary, chipWarning, colors } from './styles';
 
 interface ChatListItemProps {
@@ -84,12 +85,17 @@ function ChatChip({
 }
 
 export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({ chat }) => {
+  const [expanded, setExpanded] = useState(false);
   const relativeTime = useMemo(() => formatRelativeTime(chat.timestamp), [chat.timestamp]);
   const initials = useMemo(() => initialsFromName(chat.name), [chat.name]);
   const hasUnread = chat.unread_count > 0;
   const subjectLine = chat.subject?.trim() || 'No subject';
   const primaryFolder = (chat.folder_labels ?? [])[0];
   const replyDisabled = (chat.disabled_features ?? []).includes('reply');
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded((prev) => !prev);
+  }, []);
 
   return (
     <article
@@ -165,6 +171,28 @@ export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({ chat }) =
                   {chat.unread_count}
                 </span>
               )}
+              <button
+                type="button"
+                onClick={toggleExpanded}
+                aria-expanded={expanded}
+                aria-label={expanded ? 'Collapse chat details' : 'Expand chat details'}
+                style={{
+                  border: `1px solid ${colors.border}`,
+                  background: colors.white,
+                  borderRadius: 6,
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: colors.textSecondary,
+                  fontSize: 12,
+                  flexShrink: 0,
+                }}
+              >
+                {expanded ? '▲' : '▼'}
+              </button>
             </div>
           </div>
 
@@ -193,6 +221,8 @@ export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({ chat }) =
             {chat.is_muted && <ChatChip label="Muted" variant="muted" />}
             {replyDisabled && <ChatChip label="Replies disabled" variant="muted" />}
           </div>
+
+          {expanded && <ChatDetailPanel chat={chat} />}
         </div>
       </div>
     </article>
