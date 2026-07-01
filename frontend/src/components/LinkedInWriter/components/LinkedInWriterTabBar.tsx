@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type LinkedInWriterTab = 'editor' | 'growth' | 'analytics';
+export type LinkedInWriterTab = 'editor' | 'growth' | 'analytics' | 'inbox';
 
 interface LinkedInWriterTabBarProps {
   activeTab: LinkedInWriterTab;
@@ -11,6 +11,7 @@ const TABS: { id: LinkedInWriterTab; label: string; ariaLabel: string }[] = [
   { id: 'editor', label: 'Dashboard', ariaLabel: 'Switch to Dashboard tab' },
   { id: 'growth', label: 'Growth Engine', ariaLabel: 'Switch to Growth Engine tab' },
   { id: 'analytics', label: 'Post Analytics', ariaLabel: 'Switch to Post Analytics tab' },
+  { id: 'inbox', label: 'Inbox Chats', ariaLabel: 'Switch to Inbox Chats tab' },
 ];
 
 export const LinkedInWriterTabBar: React.FC<LinkedInWriterTabBarProps> = ({

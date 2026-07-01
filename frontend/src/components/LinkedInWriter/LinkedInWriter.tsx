@@ -16,6 +16,7 @@ import {
   ProgressTracker,
   GrowthEnginePanel,
   PostAnalyticsPanel,
+  InboxChatsPanel,
   LinkedInWriterTabBar,
   type ProgressStep,
   type LinkedInWriterTab,
@@ -173,7 +174,7 @@ const LinkedInWriterContent: React.FC<LinkedInWriterProps> = ({ className = '' }
   useEffect(() => {
     const onSwitchTab = (event: Event) => {
       const tab = (event as CustomEvent<{ tab?: LinkedInWriterTab }>).detail?.tab;
-      if (tab === 'editor' || tab === 'growth' || tab === 'analytics') {
+      if (tab === 'editor' || tab === 'growth' || tab === 'analytics' || tab === 'inbox') {
         setActiveTab(tab);
       }
     };
@@ -494,6 +495,10 @@ Always use the most appropriate tool for the user's request.`.trim();
               isActive={activeTab === 'analytics'}
               onGenerateSimilarPost={handleGenerateSimilarPost}
             />
+          </div>
+        ) : activeTab === 'inbox' ? (
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            <InboxChatsPanel isActive={activeTab === 'inbox'} />
           </div>
         ) : draft || isGenerating ? (<>
           {/* Editor Panel - Show when there's content or generating */}

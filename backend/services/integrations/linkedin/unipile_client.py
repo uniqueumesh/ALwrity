@@ -705,3 +705,64 @@ class UnipileClient:
             f"next_cursor={'set' if next_cursor else 'none'}"
         )
         return data
+
+    async def list_chats(
+        self,
+        account_id: str,
+        cursor: Optional[str] = None,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """
+        Fetch inbox chats via Unipile ``GET /api/v1/chats``.
+
+        Args:
+            account_id: Unipile account ID for the connected LinkedIn personal profile
+            cursor: Optional pagination cursor from a previous response
+            limit: Number of chats to fetch (1-100)
+
+        Returns:
+            Raw Unipile ChatList response dict (``object``, ``items``, optional ``cursor``)
+
+        Raises:
+            UnipileAPIError: If the API request fails
+            ValueError: If API key is not configured
+        """
+        if not self._api_key:
+            raise ValueError("Unipile API key is required")
+
+        safe_limit = max(1, min(limit, 100))
+        url = self._get_full_url("/api/v1/chats")
+        params: dict[str, str | int] = {
+            "account_id": account_id,
+            "limit": safe_limit,
+        }
+        if cursor:
+            params["cursor"] = cursor
+
+        logger.info(
+            f"[UnipileClient] list_chats account_id={account_id} "
+            f"limit={safe_limit} cursor={'set' if cursor else 'none'}"
+        )
+
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.get(
+                url,
+                params=params,
+                headers=_auth_headers(self._api_key),
+            )
+            _raise_for_error(response)
+            data = response.json()
+
+        item_count = 0
+        next_cursor = None
+        if isinstance(data, dict):
+            items = data.get("items")
+            if isinstance(items, list):
+                item_count = len(items)
+            next_cursor = data.get("cursor")
+
+        logger.info(
+            f"[UnipileClient] list_chats success account_id={account_id} "
+            f"items={item_count} next_cursor={'set' if next_cursor else 'none'}"
+        )
+        return data

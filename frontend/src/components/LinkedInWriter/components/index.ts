@@ -28,6 +28,9 @@ export { GrowthEnginePanel } from './GrowthEngine';
 export { PostAnalyticsPanel } from './PostAnalytics';
 export { EngagementSummary } from './PostAnalytics';
 
+// Inbox Chats
+export { InboxChatsPanel } from './InboxChats';
+
 // Tab navigation
 export { LinkedInWriterTabBar } from './LinkedInWriterTabBar';
 export type { LinkedInWriterTab } from './LinkedInWriterTabBar';
