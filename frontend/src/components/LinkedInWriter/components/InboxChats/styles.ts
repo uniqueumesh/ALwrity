@@ -51,3 +51,33 @@ export const secondaryBtn: React.CSSProperties = {
   fontSize: 13,
   cursor: 'pointer',
 };
+
+export const chipPrimary: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: colors.primary,
+  background: colors.primaryLight,
+  border: `1px solid #bfdbfe`,
+  borderRadius: 999,
+  padding: '2px 8px',
+};
+
+export const chipMuted: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: colors.textSecondary,
+  background: colors.surface,
+  border: `1px solid ${colors.border}`,
+  borderRadius: 999,
+  padding: '2px 8px',
+};
+
+export const chipWarning: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: '#92400e',
+  background: '#fef3c7',
+  border: '1px solid #fde68a',
+  borderRadius: 999,
+  padding: '2px 8px',
+};

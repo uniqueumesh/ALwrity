@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { InboxChat } from '../../../../services/inboxChatsApi';
-import { cardBase, colors } from './styles';
+import { cardBase, chipMuted, chipPrimary, chipWarning, colors } from './styles';
 
 interface ChatListItemProps {
   chat: InboxChat;
@@ -49,10 +49,47 @@ function initialsFromName(name: string): string {
   return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
 }
 
+function formatContentTypeLabel(contentType: string): string {
+  if (contentType.toLowerCase() === 'inmail') {
+    return 'InMail';
+  }
+  return contentType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function ChatChip({
+  label,
+  variant = 'default',
+}: {
+  label: string;
+  variant?: 'default' | 'primary' | 'muted' | 'warning';
+}) {
+  const style =
+    variant === 'primary'
+      ? chipPrimary
+      : variant === 'warning'
+        ? chipWarning
+        : variant === 'muted'
+          ? chipMuted
+          : {
+              fontSize: 11,
+              fontWeight: 600,
+              color: colors.textBody,
+              background: colors.surface,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 999,
+              padding: '2px 8px',
+            };
+
+  return <span style={style}>{label}</span>;
+}
+
 export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({ chat }) => {
   const relativeTime = useMemo(() => formatRelativeTime(chat.timestamp), [chat.timestamp]);
   const initials = useMemo(() => initialsFromName(chat.name), [chat.name]);
   const hasUnread = chat.unread_count > 0;
+  const subjectLine = chat.subject?.trim() || 'No subject';
+  const primaryFolder = (chat.folder_labels ?? [])[0];
+  const replyDisabled = (chat.disabled_features ?? []).includes('reply');
 
   return (
     <article
@@ -103,40 +140,59 @@ export const ChatListItem: React.FC<ChatListItemProps> = React.memo(({ chat }) =
             >
               {chat.name}
             </span>
-            {relativeTime && (
-              <span
-                style={{
-                  fontSize: 12,
-                  color: colors.textMuted,
-                  flexShrink: 0,
-                }}
-              >
-                {relativeTime}
-              </span>
-            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              {relativeTime && (
+                <span style={{ fontSize: 12, color: colors.textMuted }}>{relativeTime}</span>
+              )}
+              {hasUnread && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 20,
+                    height: 20,
+                    padding: '0 6px',
+                    borderRadius: 999,
+                    background: colors.primary,
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}
+                  aria-label={`${chat.unread_count} unread`}
+                >
+                  {chat.unread_count}
+                </span>
+              )}
+            </div>
           </div>
 
-          {hasUnread && (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: 20,
-                height: 20,
-                padding: '0 6px',
-                marginTop: 6,
-                borderRadius: 999,
-                background: colors.primary,
-                color: '#fff',
-                fontSize: 11,
-                fontWeight: 700,
-              }}
-              aria-label={`${chat.unread_count} unread`}
-            >
-              {chat.unread_count}
-            </span>
-          )}
+          <p
+            style={{
+              margin: '6px 0 10px',
+              fontSize: 13,
+              color: chat.subject ? colors.textBody : colors.textMuted,
+              lineHeight: 1.5,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Subject: {subjectLine}
+          </p>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {chat.content_type && (
+              <ChatChip label={formatContentTypeLabel(chat.content_type)} variant="primary" />
+            )}
+            {primaryFolder && <ChatChip label={primaryFolder} />}
+            {chat.is_pinned && <ChatChip label="Pinned" variant="warning" />}
+            {chat.is_archived && <ChatChip label="Archived" variant="muted" />}
+            {chat.is_readonly && <ChatChip label="Read-only" variant="muted" />}
+            {chat.is_muted && <ChatChip label="Muted" variant="muted" />}
+            {replyDisabled && <ChatChip label="Replies disabled" variant="muted" />}
+          </div>
         </div>
       </div>
     </article>

@@ -1,8 +1,5 @@
 """
 LinkedIn Inbox Chats Service — fetch and normalize Unipile chat list.
-
-Phase 3: minimal normalization (id, name, timestamp, unread_count).
-Phase 5+: personal-profile filtering and extended fields.
 """
 
 from __future__ import annotations
@@ -15,10 +12,37 @@ from loguru import logger
 from models.linkedin_inbox_models import InboxChat, InboxChatListResponse
 from services.integrations.linkedin.unipile_client import UnipileAPIError, UnipileClient
 
+FOLDER_LABELS: dict[str, str] = {
+    "INBOX": "Inbox",
+    "INBOX_LINKEDIN_CLASSIC": "Classic Inbox",
+    "INBOX_LINKEDIN_RECRUITER": "Recruiter",
+    "INBOX_LINKEDIN_SALES_NAVIGATOR": "Sales Navigator",
+    "INBOX_LINKEDIN_ORGANIZATION": "Organization",
+    "INBOX_INSTAGRAM_GENERAL": "Instagram",
+}
+
+FOLDER_DISPLAY_PRIORITY: tuple[str, ...] = (
+    "INBOX_LINKEDIN_CLASSIC",
+    "INBOX",
+    "INBOX_LINKEDIN_RECRUITER",
+    "INBOX_LINKEDIN_SALES_NAVIGATOR",
+    "INBOX_LINKEDIN_ORGANIZATION",
+    "INBOX_INSTAGRAM_GENERAL",
+)
+
 
 def _parse_timestamp(date_str: Optional[str]) -> Optional[datetime]:
     """Parse Unipile timestamp string to datetime, or None if missing/invalid."""
     if not date_str:
+        return None
+
+    if isinstance(date_str, (int, float)):
+        try:
+            return datetime.utcfromtimestamp(float(date_str) / 1000.0 if date_str > 1e12 else float(date_str))
+        except (OSError, ValueError, OverflowError):
+            return None
+
+    if not isinstance(date_str, str):
         return None
 
     formats = [
@@ -38,6 +62,63 @@ def _parse_timestamp(date_str: Optional[str]) -> Optional[datetime]:
     return None
 
 
+def _flag_to_bool(value: Any) -> bool:
+    """Convert Unipile 0/1 or boolean flags to bool."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value != 0
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return False
+
+
+def _is_muted(muted_until: Any) -> bool:
+    """Determine if chat is muted from Unipile muted_until field."""
+    if muted_until is None:
+        return False
+    if muted_until is True or muted_until == -1:
+        return True
+    if isinstance(muted_until, (int, float)):
+        if muted_until <= 0:
+            return muted_until == -1
+        parsed = _parse_timestamp(str(int(muted_until)))
+        return parsed is not None and parsed > datetime.utcnow()
+    if isinstance(muted_until, str) and muted_until.strip():
+        parsed = _parse_timestamp(muted_until)
+        if parsed:
+            return parsed > datetime.utcnow()
+        return True
+    return False
+
+
+def _normalize_folders(raw_folders: Any) -> list[str]:
+    if not isinstance(raw_folders, list):
+        return []
+    return [str(folder) for folder in raw_folders if folder]
+
+
+def _folder_labels(folders: list[str]) -> list[str]:
+    labels: list[str] = []
+    for folder in folders:
+        labels.append(FOLDER_LABELS.get(folder, folder.replace("_", " ").title()))
+    return labels
+
+
+def _primary_folder_label(folders: list[str], labels: list[str]) -> Optional[str]:
+    for key in FOLDER_DISPLAY_PRIORITY:
+        if key in folders:
+            idx = folders.index(key)
+            return labels[idx]
+    return labels[0] if labels else None
+
+
+def _normalize_disabled_features(raw: Any) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    return [str(feature) for feature in raw if feature]
+
+
 def _normalize_chat(item: dict[str, Any]) -> InboxChat:
     """Map a raw Unipile Chat item to InboxChat."""
     raw_name = item.get("name")
@@ -53,11 +134,51 @@ def _normalize_chat(item: dict[str, Any]) -> InboxChat:
     if not chat_id:
         raise ValueError("Chat item missing id")
 
+    raw_subject = item.get("subject")
+    subject = raw_subject.strip() if isinstance(raw_subject, str) and raw_subject.strip() else None
+
+    raw_content_type = item.get("content_type")
+    content_type = (
+        raw_content_type.strip().lower()
+        if isinstance(raw_content_type, str) and raw_content_type.strip()
+        else None
+    )
+
+    folders = _normalize_folders(item.get("folder"))
+    labels = _folder_labels(folders)
+    primary = _primary_folder_label(folders, labels)
+    if primary and labels and labels[0] != primary:
+        labels = [primary] + [label for label in labels if label != primary]
+
+    chat_type = item.get("type")
+    parsed_type: Optional[int] = None
+    if chat_type is not None:
+        try:
+            parsed_type = int(chat_type)
+        except (TypeError, ValueError):
+            parsed_type = None
+
     return InboxChat(
         id=str(chat_id),
         name=name,
+        subject=subject,
         timestamp=_parse_timestamp(item.get("timestamp")),
         unread_count=unread_count,
+        content_type=content_type,
+        folders=folders,
+        folder_labels=labels,
+        is_pinned=_flag_to_bool(item.get("pinned")),
+        is_archived=_flag_to_bool(item.get("archived")),
+        is_readonly=_flag_to_bool(item.get("read_only")),
+        is_muted=_is_muted(item.get("muted_until")),
+        disabled_features=_normalize_disabled_features(item.get("disabledFeatures")),
+        chat_type=parsed_type,
+        provider_id=str(item["provider_id"]) if item.get("provider_id") else None,
+        attendee_provider_id=(
+            str(item["attendee_provider_id"]) if item.get("attendee_provider_id") else None
+        ),
+        organization_id=str(item["organization_id"]) if item.get("organization_id") else None,
+        mailbox_id=str(item["mailbox_id"]) if item.get("mailbox_id") else None,
     )
 
 

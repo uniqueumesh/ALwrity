@@ -3,6 +3,7 @@ import { useInboxChats } from '../../hooks/useInboxChats';
 import { ChatListItem } from './ChatListItem';
 import { IdleState, NoChatsState } from './EmptyState';
 import { ErrorState } from './ErrorState';
+import { InboxSummary } from './InboxSummary';
 import { LoadingState } from './LoadingState';
 import { colors, panelContainer, primaryBtn } from './styles';
 
@@ -73,9 +74,7 @@ export const InboxChatsPanel: React.FC<InboxChatsPanelProps> = ({ isActive }) =>
             <NoChatsState onRefresh={handleFetch} refreshing={isLoading} />
           ) : (
             <>
-              <p style={{ margin: 0, fontSize: 13, color: colors.textSecondary }}>
-                Showing {data.chats.length} conversation{data.chats.length === 1 ? '' : 's'}
-              </p>
+              <InboxSummary chats={data.chats} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {data.chats.map((chat) => (
                   <ChatListItem key={chat.id} chat={chat} />
